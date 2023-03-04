@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:kod_client/components/loader.dart';
+import 'package:kod_client/components/game_factor.dart';
 import 'package:kod_client/components/number_picker.dart';
 import 'package:kod_client/components/picked_number.dart';
 import 'package:kod_client/components/player.dart';
@@ -10,6 +11,8 @@ import 'package:kod_client/components/submit_button.dart';
 import 'package:kod_client/components/timer.dart';
 
 import 'package:kod_client/model/event.dart';
+import 'package:kod_client/model/game.dart';
+import 'package:kod_client/model/turn.dart';
 import 'package:kod_client/model/event_types.dart';
 import 'package:kod_client/model/pick.dart';
 import 'package:kod_client/model/player.dart';
@@ -28,12 +31,14 @@ class _GameViewState extends State<GameView> {
   late final WebSocketChannel channel;
   late final StreamSubscription<dynamic> streamSub;
   late final String selfID;
+
+  Turn? currentTurn;
+  Game? game;
   int selfScore = 0;
   int pickedNumber = 0;
 
   Set<Player> players = <Player>{};
   bool sended = false;
-  bool gameStarted = false;
 
   String? errorMessage;
 
@@ -61,12 +66,13 @@ class _GameViewState extends State<GameView> {
     var ev = Event.fromJson(decoded);
 
     switch (ev.type) {
+      case EventType.gameFound:
+        game = ev.game;
+        break;
       case EventType.playerJoined:
         List<Player> newPlayers = <Player>[];
         ev.players?.forEach((p) {
-          if (p.id == selfID) {
-            return;
-          }
+          if (p.id == selfID) return;
           newPlayers.add(p);
         });
         setState(() {
@@ -74,11 +80,9 @@ class _GameViewState extends State<GameView> {
         });
         break;
       case EventType.startTurn:
-        if (!gameStarted) {
-          setState(() {
-            gameStarted = true;
-          });
-        }
+        setState(() {
+          currentTurn = ev.turn;
+        });
         break;
       case EventType.endTurn:
         Set<Player> newPlayersList = <Player>{};
@@ -115,29 +119,30 @@ class _GameViewState extends State<GameView> {
     if (errorMessage != null) {
       return Text(errorMessage!);
     }
-    if (players.isEmpty) {
+    if (game == null) {
       return const CircularLoader();
     }
 
     List<Widget> playersRowContent = <Widget>[];
 
-    for (int i in List.generate(4, (index) => index)) {
-      playersRowContent.add(
-          PlayerListItem(players.length > i ? players.elementAt(i) : null));
+    for (int i in List.generate(game!.maxPlayers - 1, (index) => index)) {
+      Player? player;
+      if (players.length > i) player = players.elementAt(i);
+      playersRowContent.add(PlayerListItem(player));
     }
 
     Row playersRow = Row(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: playersRowContent,
     );
 
-    Widget timerView = const TimerView(0);
+    Widget timerView = TimerView(currentTurn?.deadline ?? 0);
+
     Widget picker = NumberPicker(onNumberChange);
     Widget submitLayer;
 
-    if (!gameStarted) {
+    if (currentTurn == null) {
       submitLayer = const CircularLoader();
     } else {
       if (!sended) {
@@ -152,10 +157,12 @@ class _GameViewState extends State<GameView> {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.max,
       children: [
-        Expanded(flex: 1, child: timerView),
-        Expanded(flex: 3, child: playersRow),
-        Expanded(flex: 3, child: picker),
-        Expanded(flex: 3, child: submitLayer),
+        Flexible(flex: 1, fit: FlexFit.tight, child: timerView),
+        Flexible(flex: 3, fit: FlexFit.tight, child: playersRow),
+        Flexible(
+            flex: 1, fit: FlexFit.tight, child: GameFactorView(game!.factor)),
+        Flexible(flex: 3, fit: FlexFit.tight, child: picker),
+        Flexible(flex: 1, fit: FlexFit.tight, child: submitLayer),
       ],
     );
   }

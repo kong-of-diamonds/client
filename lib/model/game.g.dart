@@ -1,13 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'player.dart';
+part of 'game.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-Player _$PlayerFromJson(Map<String, dynamic> json) => Player(
-      json['id'] as String,
-      json['name'] as String,
-      json['score'] as int,
+Game _$GameFromJson(Map<String, dynamic> json) => Game(
+      (json['factor'] as num).toDouble(),
+      json['max_players'] as int,
     );

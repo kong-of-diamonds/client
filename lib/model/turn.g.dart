@@ -8,7 +8,8 @@ part of 'turn.dart';
 
 Turn _$TurnFromJson(Map<String, dynamic> json) => Turn(
       json['created'] as int,
-      (json['winNumber'] as num).toDouble(),
+      json['deadline'] as int,
+      (json['win_number'] as num).toDouble(),
       (json['picks'] as List<dynamic>?)
           ?.map((e) => TurnPick.fromJson(e as Map<String, dynamic>))
           .toList(),

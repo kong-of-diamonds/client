@@ -15,4 +15,7 @@ Event _$EventFromJson(Map<String, dynamic> json) => Event(
       json['turn'] == null
           ? null
           : Turn.fromJson(json['turn'] as Map<String, dynamic>),
+      json['game'] == null
+          ? null
+          : Game.fromJson(json['game'] as Map<String, dynamic>),
     );

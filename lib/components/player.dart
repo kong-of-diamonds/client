@@ -8,15 +8,14 @@ class PlayerListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
+    return Expanded(
       flex: 1,
-      fit: FlexFit.tight,
       child: Column(
         mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(player?.id ?? "..."),
+          Text("#${player?.name ?? "..."}"),
           Stack(
             children: [
               Padding(
